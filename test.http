@@ -1,0 +1,30 @@
+
+## index
+#GET http://localhost:8080/articles
+#Accept: application/json
+
+## get articles with date
+GET http://localhost:8080/articles?date=2022-08-05
+Accept: application/json
+
+## GET request
+GET http://localhost:8080/hello?name=Bourne
+Accept: text/html
+
+
+### GET request with parameter
+GET https://httpbin.org/get?show_env=1
+Accept: application/json
+#
+#### GET request with environment variables
+#GET {{host}}/get?show_env={{show_env}}
+#Accept: application/json
+#
+#### GET request with disabled redirects
+## @no-redirect
+#GET http://httpbin.org/status/301
+#
+#### GET request with dynamic variables
+#GET http://httpbin.org/anything?id={{$uuid}}&ts={{$timestamp}}
+
+###
