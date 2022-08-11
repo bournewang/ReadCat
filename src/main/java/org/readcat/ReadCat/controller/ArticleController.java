@@ -1,9 +1,12 @@
 package org.readcat.ReadCat.controller;
 
 import org.readcat.ReadCat.model.Article;
+import org.readcat.ReadCat.model.User;
 import org.readcat.ReadCat.repository.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +26,7 @@ import java.util.Optional;
 import static org.springframework.http.HttpStatus.*;
 
 //@CrossOrigin(origins = "*")
+@RequestMapping("/api")
 @RestController
 public class ArticleController {
     @Autowired
@@ -30,11 +34,15 @@ public class ArticleController {
 
     @GetMapping("/articles")
     public List<Article> index(@RequestParam(value="date", defaultValue = "") String date) throws ParseException {
+
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println("====== current user");
+        System.out.println(user);
         if (!StringUtils.isEmpty(date)) {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            return repository.findAllByDate(format.parse(date));
+            return repository.findAllByDate(user.getId(), format.parse(date));
         }
-        return repository.findAllByOrderByCreatedAtDesc();
+        return repository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
     }
 
     @GetMapping("/articles/{id}")
@@ -48,46 +56,10 @@ public class ArticleController {
     }
 
     @PostMapping("/articles")
-    public void add(Article article) {
+    public void create(Article article) {
         repository.save(article);
     }
 
-    @PostMapping("/articles/{id}/content")
-    public String get(@PathVariable Long id,
-                      @RequestParam (value="content", defaultValue = "") String content,
-                      HttpServletRequest request) {
-        try {
-            Article article = repository.findById(id).get();
-            System.out.println("content: "+content);
-            String baseUrl = request.getScheme()+"://" + request.getServerName() + ":" + request.getServerPort();
-            String filename = article.getUrl().substring(baseUrl.length());
-            System.out.println(article);
-            System.out.println("filename: "+filename);
-
-            String baseDir = "./";
-            String uploadDir = "upload/";
-
-            FileOutputStream fileOutputStream;
-            fileOutputStream = new FileOutputStream(new File(baseDir + uploadDir + filename));
-            fileOutputStream.write(content.getBytes());
-            fileOutputStream.close();
-
-            return "update content success";
-        }catch(NoSuchElementException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "error";
-    }
 
 
-    @GetMapping("/count_by_date")
-    public List<Object[]> countByDate() {
-        List<Object[]> res = repository.countArticlesByDate();
-        res.forEach(ele -> System.out.println(ele[0] +","+ele[1]));
-        return res;
-    }
 }
